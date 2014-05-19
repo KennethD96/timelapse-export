@@ -46,13 +46,14 @@ if "-m" in input_args:
 else:
 	domove = False
 
+frames_path = frames_output_path
 frame_dir = os.listdir(input_args[0])
+dest_path = os.listdir(frames_path)
 if sort_dir:
 	frame_dir.sort()
 
-frames_path = frames_output_path
 ffmpeg_output = ffmpeg_default_output if len(input_args) < 2 else input_args[1]
-frm_frmt = "." + re.match(".*\.(.*)$", frame_dir[0]).group(1)
+frm_frmt = "." + re.match(".*\.(.*)$", (frame_dir[0] if len(frame_dir) >= 1 else dest_path[0])).group(1)
 out_frmt = re.match(".*\.(.*)$", ffmpeg_output).group(1)
 frameid = 0
 
@@ -61,19 +62,22 @@ if not os.path.exists(frames_path):
 
 """ Copy frames """
 print("Comparing source with cache.")
-if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
-	for frame in frame_dir:
-		dest_frame = str(frameid).zfill(filename_width) + frm_frmt
-		dest_file = os.path.join(frames_path, dest_frame)
-		source_file = os.path.join(input_args[0], frame)
-		print("Moving frame: %s -> %s" % (frame, dest_frame))
-		shutil.copy(source_file, dest_file)
-		if domove:
-			os.remove(source_file)
-		frameid = frameid+1
-	print("%s frames moved successfully!" % str(len(frame_dir)))
+if  len(frame_dir) >= 1:
+	if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
+		for frame in frame_dir:
+			dest_frame = str(frameid).zfill(filename_width) + frm_frmt
+			dest_file = os.path.join(frames_path, dest_frame)
+			source_file = os.path.join(input_args[0], frame)
+			print("Moving frame: %s -> %s" % (frame, dest_frame))
+			shutil.copy(source_file, dest_file)
+			if domove:
+				os.remove(source_file)
+			frameid = frameid+1
+		print("%s frames moved successfully!" % str(len(frame_dir)))
+	else:
+		print("Source unchanged from cache. Skipping.")
 else:
-	print("Source unchanged from cache. Skipping.")
+	print("Source-dir is empty, skipping copy.")
 
 """ Generate time-lapse """
 try:
