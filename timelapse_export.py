@@ -16,21 +16,24 @@ ffmpeg_args = {
 	}
 
 ffmpeg_default_output = "weathermap.mp4"
-frame_output_path = "frames"
+frames_output_path = "frames"
 filename_width = 10
 
 input_args = sys.argv[1::]
 
+"""No video (just copy frames)"""
 if "-nv" in input_args:
 	novideo = True
 	input_args.remove("-nv")
 else:
 	novideo = False
+"""Sort files"""
 if "-s" in input_args:
 	sort_dir = True
 	input_args.remove("-s")
 else:
 	sort_dir = False
+"""Force Copy (disable folder comparison)"""
 if "-fc" in input_args:
 	force_copy = True
 	input_args.remove("-fc")
@@ -42,7 +45,7 @@ if sort_dir:
 	frame_dir.sort()
 
 current_path = os.path.dirname(__file__)
-frames_path = frame_output_path
+frames_path = frames_output_path
 ffmpeg_output = ffmpeg_default_output if len(input_args) < 2 else input_args[1]
 frm_frmt = "." + re.match(".*\.(.*)$", frame_dir[0]).group(1)
 out_frmt = re.match(".*\.(.*)$", ffmpeg_output).group(1)
@@ -51,6 +54,7 @@ frameid = 0
 if not os.path.exists(frames_path):
 	os.mkdir(frames_path)
 
+""" Copy frames """
 print("Comparing source with cache.")
 if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
 	for frame in frame_dir:
@@ -63,6 +67,7 @@ if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
 else:
 	print("Source unchanged from cache. Skipping.")
 
+""" Generate time-lapse """
 try:
 	if not novideo:
 		if out_frmt in ffmpeg_args:
