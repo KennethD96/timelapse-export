@@ -4,10 +4,10 @@ import os, sys, shutil
 import subprocess, re
 
 ffmpeg_presets = {
-	"h264_50": "-y -r 50 -i <input> -vcodec libx264 -qp 5 -preset:v fast <output>",
+	"h264_50": "-y -r 50 -i <input> -vcodec libx264 -qp 5 -preset:v veryslow <output>",
 	"webm_50": "-y -r 50 -i <input> -vcodec vp8 -b:v 2M <output>",
 	}
-ffmpeg_args = {
+ffmpeg_formats = {
 	"mp4":ffmpeg_presets["h264_50"],
 	"avi":ffmpeg_presets["h264_50"],
 	"ts":ffmpeg_presets["h264_50"],
@@ -63,22 +63,25 @@ if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
 		print("Moving frame: %s -> %s" % (frame, dest_frame))
 		shutil.copy(os.path.join(input_args[0], frame), dest_file)
 		frameid = frameid+1
-	print("Frames exported successfully!")
+	print("Copied %s frames successfully!" % str(len(frame_dir)))
 else:
 	print("Source unchanged from cache. Skipping.")
 
 """ Generate time-lapse """
 try:
 	if not novideo:
-		if out_frmt in ffmpeg_args:
+		if out_frmt in ffmpeg_formats:
 			ffmpeg_input = os.path.join(frames_path, "%%%sd%s" % (str(filename_width), frm_frmt))
-			if "<input>" in ffmpeg_args[out_frmt]:
-				ffmpeg_args[out_frmt] = ffmpeg_args[out_frmt].replace("<input>", ffmpeg_input)
-			if "<output>" in ffmpeg_args[out_frmt]:
-				ffmpeg_args[out_frmt] = ffmpeg_args[out_frmt].replace("<output>", ffmpeg_output)
+			if "<input>" in ffmpeg_formats[out_frmt]:
+				ffmpeg_formats[out_frmt] = ffmpeg_formats[out_frmt].replace("<input>", ffmpeg_input)
+			if "<output>" in ffmpeg_formats[out_frmt]:
+				ffmpeg_formats[out_frmt] = ffmpeg_formats[out_frmt].replace("<output>", ffmpeg_output)
 			print("Starting time-lapse export...")
-			subprocess.Popen("ffmpeg %s" % ffmpeg_args[out_frmt], shell=True, stdout=subprocess.PIPE)
+			ffmpeg = subprocess.Popen("ffmpeg %s" % ffmpeg_formats[out_frmt], shell=True, stdout=subprocess.PIPE)
+			ffmpeg.wait()
 		else:
 			print("Warning: Unknown output format!")
 except OSError:
-	print("Warning: Could not fetch FFMPEG. Is it installed?")
+	print('Warning: Could not fetch FFmpeg. Is it installed? Try running with the "-nv" option to disable this warning.')
+except KeyboardInterrupt:
+	print("Exiting...")
