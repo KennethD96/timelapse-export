@@ -31,13 +31,18 @@ if "-s" in input_args:
 	input_args.remove("-s")
 else:
 	sort_dir = False
+if "-fc" in input_args:
+	force_copy = True
+	input_args.remove("-fc")
+else:
+	force_copy = False
 
 frame_dir = os.listdir(input_args[0])
 if sort_dir:
 	frame_dir.sort()
 
 current_path = os.path.dirname(__file__)
-frames_path = os.path.join(current_path, frame_output_path)
+frames_path = frame_output_path
 ffmpeg_output = ffmpeg_default_output if len(input_args) < 2 else input_args[1]
 frm_frmt = "." + re.match(".*\.(.*)$", frame_dir[0]).group(1)
 out_frmt = re.match(".*\.(.*)$", ffmpeg_output).group(1)
@@ -47,7 +52,7 @@ if not os.path.exists(frames_path):
 	os.mkdir(frames_path)
 
 print("Comparing source with cache.")
-if not len(frame_dir) == len(os.listdir(frames_path)):
+if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
 	for frame in frame_dir:
 		dest_frame = str(frameid).zfill(filename_width) + frm_frmt
 		dest_file = os.path.join(frames_path, dest_frame)
