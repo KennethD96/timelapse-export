@@ -4,15 +4,16 @@ import os, sys, shutil
 import subprocess, re
 
 ffmpeg_presets = {
-	"h264_50": "-y -r 50 -i <input> -vcodec libx264 -qp 1 -preset:v veryslow <output>",
-	"webm_50": "-y -r 50 -i <input> -vcodec vp8 -b:v 2M <output>",
+	"h264_60": "-y -r 60 -i <input> -vcodec libx264 -qp 1 -preset:v veryslow <output>",
+	"webm_60": "-y -r 60 -i <input> -vcodec vp8 -b:v 2M <output>",
 	}
+
 ffmpeg_formats = {
-	"mp4":ffmpeg_presets["h264_50"],
-	"avi":ffmpeg_presets["h264_50"],
-	"mkv":ffmpeg_presets["h264_50"],
-	"ts":ffmpeg_presets["h264_50"],
-	"webm":ffmpeg_presets["webm_50"],
+	"mp4":ffmpeg_presets["h264_60"],
+	"avi":ffmpeg_presets["h264_60"],
+	"mkv":ffmpeg_presets["h264_60"],
+	"ts":ffmpeg_presets["h264_60"],
+	"webm":ffmpeg_presets["webm_60"],
 	}
 
 ffmpeg_default_output = "weathermap.mp4"
@@ -27,6 +28,12 @@ if "-nv" in input_args:
 	input_args.remove("-nv")
 else:
 	novideo = False
+"""Skip copy from source"""
+if "-sc" in input_args:
+	doskipcopy = True
+	input_args.remove("-sc")
+else:
+	doskipcopy = False
 """Sort files"""
 if "-s" in input_args:
 	sort_dir = True
@@ -55,29 +62,36 @@ if sort_dir:
 ffmpeg_output = ffmpeg_default_output if len(input_args) < 2 else input_args[1]
 frm_frmt = "." + re.match(".*\.(.*)$", (frame_dir[0] if len(frame_dir) >= 1 else dest_path[0])).group(1)
 out_frmt = re.match(".*\.(.*)$", ffmpeg_output).group(1)
+copy_success = False
 frameid = 0
 
 if not os.path.exists(frames_path):
 	os.mkdir(frames_path)
 
 """ Copy frames """
-print("Comparing source with cache.")
-if  len(frame_dir) >= 1:
-	if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
-		for frame in frame_dir:
-			dest_frame = str(frameid).zfill(filename_width) + frm_frmt
-			dest_file = os.path.join(frames_path, dest_frame)
-			source_file = os.path.join(input_args[0], frame)
-			print("Moving frame: %s -> %s" % (frame, dest_frame))
-			shutil.copy(source_file, dest_file)
-			if domove:
-				os.remove(source_file)
-			frameid = frameid+1
-		print("%s frames moved successfully!" % str(len(frame_dir)))
+if not doskipcopy:
+	print("Comparing source with cache.")
+	if len(frame_dir) >= 1:
+		if not len(frame_dir) == len(os.listdir(frames_path)) or force_copy:
+			for frame in frame_dir:
+				dest_frame = str(frameid).zfill(filename_width) + frm_frmt
+				dest_file = os.path.join(frames_path, dest_frame)
+				source_file = os.path.join(input_args[0], frame)
+				print("Moving frame: %s -> %s" % (frame, dest_frame))
+				shutil.copy(source_file, dest_file)
+				frameid = frameid+1
+			copy_success = True
+			print("%s frames moved successfully!" % str(len(frame_dir)))
+		else:
+			print("Source unchanged. Skipping.")
 	else:
-		print("Source unchanged from cache. Skipping.")
+		print("Source-dir is empty, skipping copy.")
 else:
-	print("Source-dir is empty, skipping copy.")
+	print("Skipping copy.")
+
+if domove and copy_success:
+	for source_frame in frame_dir:
+		os.remove(source_frame)
 
 """ Generate time-lapse """
 try:
