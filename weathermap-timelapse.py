@@ -2,21 +2,24 @@
 #encoding: utf-8
 import os, sys, shutil
 import subprocess, re
+import platform
 
 ffmpeg_presets = {
-	"h264_60": "-y -r 60 -i <input> -vcodec libx264 -qp 1 -preset:v veryslow <output>",
-	"webm_60": "-y -r 60 -i <input> -vcodec vp8 -b:v 2M <output>",
+	"h264_60": "-y -r 60 -i <input> -vcodec libx264 -pix_fmt yuv444p -profile:v high444 -preset:v veryslow <output>", # lossless (predictive) h264 (not websafe)
+	"h264_60_lossy": "-y -r 60 -i <input> -vcodec libx264 -pix_fmt yuv422p -qp 10 -preset:v veryslow <output>", # web-safe
+	"webm_60": "-y -r 60 -i <input> -vcodec vp8 -b:v 2M <output>", # webm (partially websafe)
 	}
 
 ffmpeg_formats = {
-	"mp4":ffmpeg_presets["h264_60"],
+	"mp4":ffmpeg_presets["h264_60_lossy"],
 	"avi":ffmpeg_presets["h264_60"],
 	"mkv":ffmpeg_presets["h264_60"],
 	"ts":ffmpeg_presets["h264_60"],
 	"webm":ffmpeg_presets["webm_60"],
 	}
 
-ffmpeg_default_output = "weathermap.mp4"
+ffmpeg_binary = "ffmpeg"
+ffmpeg_default_output = "weathermap.avi"
 frames_output_path = "frames"
 filename_width = 10
 
@@ -38,6 +41,8 @@ else:
 if "-s" in input_args:
 	sort_dir = True
 	input_args.remove("-s")
+elif platform.system() != "Windows":
+	sort_dir = True
 else:
 	sort_dir = False
 """Force Copy (disable folder comparison)"""
@@ -54,6 +59,8 @@ else:
 	domove = False
 
 frames_path = frames_output_path
+if not os.path.exists(frames_path):
+	os.mkdir(frames_path)
 frame_dir = os.listdir(input_args[0])
 dest_path = os.listdir(frames_path)
 if sort_dir:
@@ -64,9 +71,6 @@ frm_frmt = "." + re.match(".*\.(.*)$", (frame_dir[0] if len(frame_dir) >= 1 else
 out_frmt = re.match(".*\.(.*)$", ffmpeg_output).group(1)
 copy_success = False
 frameid = 0
-
-if not os.path.exists(frames_path):
-	os.mkdir(frames_path)
 
 """ Copy frames """
 if not doskipcopy:
@@ -103,7 +107,7 @@ try:
 			if "<output>" in ffmpeg_formats[out_frmt]:
 				ffmpeg_formats[out_frmt] = ffmpeg_formats[out_frmt].replace("<output>", ffmpeg_output)
 			print("Starting time-lapse export...")
-			ffmpeg = subprocess.Popen("ffmpeg %s" % ffmpeg_formats[out_frmt], shell=True, stdout=subprocess.PIPE)
+			ffmpeg = subprocess.Popen("%s %s" % (ffmpeg_binary, ffmpeg_formats[out_frmt]), shell=True, stdout=subprocess.PIPE)
 			ffmpeg.wait()
 		else:
 			print("Warning: Unknown output format!")
