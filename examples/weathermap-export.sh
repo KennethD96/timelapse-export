@@ -1,6 +1,3 @@
-# Example of how to run this together with your poller.php script in your cron job:
-# */1 * * * * www-data (php /usr/share/cacti/poller.php > /dev/null 2>&1) && (/var/weathermap/weathermap-export.sh)
-
 DATE=`date '+%y%m%d%H%M'`
 # Point this to your generated weathermap image
 SOURCE_PATH=/usr/share/cacti/plugins/weathermap/output/00000000000000000000.png
