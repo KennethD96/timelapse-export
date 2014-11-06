@@ -7,15 +7,15 @@ import platform
 # Config
 ffmpeg_binary = "ffmpeg"
 ffmpeg_default_output = "timelapse.mkv"
-frames_cache_dir = "frames"
 ffmpeg_debugArgs = "-y"
 ffmpeg_debug = False
-filename_width = 10
+frames_cache_dir = "frames"
+frames_filename_len = 10
 
 ffmpeg_presets = {
-    "h264_60": "-r 60 -i <input> -c:v libx264 -crf 0 -pix_fmt yuv444p -preset:v veryslow <output>", # predictive h264 (lossless) (not websafe)
+    "h264_60": "-r 60 -i <input> -c:v libx264 -crf 0 -pix_fmt yuv444p -preset:v veryslow <output>", # predictive h264 (lossless) (not web-safe)
     "h264_60_lossy": "-r 60 -i <input> -c:v libx264 -pix_fmt yuv420p -qp 16 -preset:v veryslow <output>", # h264 (lossy) web-safe
-    "webm_60": "-r 60 -i <input> -c:v vp8 -b:v 2M <output>", # webm (VP8) (partially websafe (Newer browsers only))
+    "webm_60": "-r 60 -i <input> -c:v vp8 -b:v 1M <output>", # webm (VP8) (partially web-safe (Newer browsers only))
     }
 
 ffmpeg_formats = {
@@ -26,11 +26,12 @@ ffmpeg_formats = {
     "webm":ffmpeg_presets["webm_60"],
     }
 
+# These options can be overridden.
 option_values = {
     "f":"Force copy",
     "m":"Move source-frames",
     "s":"Sort files in ascending order",
-    "nv":"Disable videorendering",
+    "nv":"Disable video rendering",
     "sc":"Skip copy",
 }
 
@@ -74,13 +75,13 @@ out_frmt = re.match(".*\.(.*)$", ffmpeg_output).group(1)
 copy_success = False
 frameid = 0
 
-""" Copy frames """
+# Copy frames
 if arg_options["sc"] != True:
     print("Comparing source with cache.")
     if len(frame_dir) >= 1:
         if not len(frame_dir) == len(dest_path) or arg_options["f"] == True:
             for frame in frame_dir:
-                dest_frame = str(frameid).zfill(filename_width) + frm_frmt
+                dest_frame = str(frameid).zfill(frames_filename_len) + frm_frmt
                 dest_file = os.path.join(frames_cache_dir, dest_frame)
                 source_file = os.path.join(input_args[0], frame)
                 print("Copying frame: %s -> %s" % (frame, dest_frame))
@@ -100,11 +101,11 @@ if arg_options["m"] == True and copy_success:
     for source_frame in frame_dir:
         os.remove(os.path.join(input_args[0], source_frame))
 
-""" Generate time-lapse """
+# Generate time-lapse
 try:
     if arg_options["nv"] != True:
         if out_frmt in ffmpeg_formats:
-            ffmpeg_input = os.path.join(frames_cache_dir, "%%%sd%s" % (str(filename_width), frm_frmt))
+            ffmpeg_input = os.path.join(frames_cache_dir, "%%%sd%s" % (str(frames_filename_len), frm_frmt))
             if ffmpeg_debug == True:
                 ffmpeg_formats[out_frmt] = "%s %s" % (ffmpeg_debugArgs, ffmpeg_formats[out_frmt])
             if "<input>" in ffmpeg_formats[out_frmt]:
