@@ -1,5 +1,5 @@
-# Example of how to run this together with your poller.php script in your cron job:
+# Example of how to run this together with your poller.php script in your cron job
 */1 * * * * www-data (php /usr/share/cacti/poller.php > /dev/null 2>&1) && (/path/to/weathermap-export.sh)
 
-# To automatically generate time-lapse on the first day of every month:
+# Generate time-lapse automatically on first day of the month (00:00)
 #0 0 1 * * www-data /path/to/timelapse-export.py -f -m "/path/to/stored/frames" "/path/to/timelapse.mkv"

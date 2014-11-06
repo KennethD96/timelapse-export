@@ -15,6 +15,7 @@ TODO:
 * Add argument to set FFmpeg options in input.
 * Validate first frames in cache and source (checksum?) for comparison instead of only directory length.
 * Add time/date vars for input arguments including previous month (for monthly cron jobs).
+* Add option to delete cache directory after FFmpeg is done.
 """
 
 # Config
@@ -43,7 +44,7 @@ ffmpeg_formats = {
 option_values = {
     "f":"Force copy",
     "m":"Delete source-files",
-    "s":"Sort files in ascending order",
+    "s":"Sort files in ascending order", # Defaults to True on UNIX systems.
     "nv":"Disable video rendering",
     "sc":"Skip copy",
 }
