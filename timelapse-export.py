@@ -4,20 +4,6 @@ import os, sys, shutil
 import subprocess, re
 import platform
 
-"""
-TODO:
-* Allow multiple outputs.
-    - Convert format-recognition to function.
-    - Run format-recognition together with FFmpeg function.
-* Make "<input/output>" obsolete by recognizing "-i" argument and automatically suffix output-path.
-* Handle non-existing directories and bad syntax better.
-    - Allow options to be merged (e.g. "-fmNv")
-* Add argument to set FFmpeg options in input.
-* Validate first frames in cache and source (checksum?) for comparison instead of only directory length.
-* Add time/date vars for input arguments including previous month (for monthly cron jobs).
-* Add option to delete cache directory after FFmpeg is done.
-"""
-
 # Config
 ffmpeg_binary = "ffmpeg"
 ffmpeg_default_output = "timelapse.mkv"
@@ -28,7 +14,7 @@ frames_filename_len = 10
 
 ffmpeg_presets = {
     "h264_60": "-r 60 -i <input> -c:v libx264 -crf 0 -pix_fmt yuv444p -preset:v veryslow <output>", # predictive h264 (lossless) (not web-safe)
-    "h264_60_lossy": "-r 60 -i <input> -c:v libx264 -pix_fmt yuv420p -qp 16 -preset:v veryslow <output>", # h264 (lossy) web-safe
+    "h264_60_lossy": "-r 60 -i <input> -c:v libx264 -pix_fmt yuv420p -qp 18 -preset:v veryslow <output>", # h264 (lossy) web-safe
     "webm_60": "-r 60 -i <input> -c:v vp8 -b:v 1M <output>", # webm (VP8) (partially web-safe (Newer browsers only))
     }
 
