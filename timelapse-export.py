@@ -1,8 +1,11 @@
 #!/usr/bin/python
-#encoding: utf-8
-import os, sys, shutil
-import subprocess, re
+# encoding: utf-8
+import subprocess
 import platform
+import shutil
+import sys
+import os
+import re
 
 # Config
 ffmpeg_binary = "ffmpeg"
@@ -13,26 +16,26 @@ frames_cache_dir = "frames"
 frames_filename_len = 10
 
 ffmpeg_presets = {
-    "h264_60": "-r 60 -i <input> -c:v libx264 -crf 0 -pix_fmt yuv444p -preset:v veryslow <output>", # predictive h264 (lossless) (not web-safe)
-    "h264_60_lossy": "-r 60 -i <input> -c:v libx264 -pix_fmt yuv420p -qp 18 -preset:v veryslow <output>", # h264 (lossy) web-safe
-    "webm_60": "-r 60 -i <input> -c:v vp8 -b:v 1M <output>", # webm (VP8) (partially web-safe (Newer browsers only))
-    }
+    "h264_60": "-r 60 -i <input> -c:v libx264 -crf 0 -pix_fmt yuv444p -preset:v veryslow <output>",  # predictive h264 (lossless) (not web-safe)
+    "h264_60_lossy": "-r 60 -i <input> -c:v libx264 -pix_fmt yuv420p -qp 18 -preset:v veryslow <output>",  # h264 (lossy) web-safe
+    "webm_60": "-r 60 -i <input> -c:v vp8 -b:v 1M <output>",  # webm (VP8) (partially web-safe (Newer browsers only))
+}
 
 ffmpeg_formats = {
-    "mp4":ffmpeg_presets["h264_60_lossy"],
-    "avi":ffmpeg_presets["h264_60"],
-    "mkv":ffmpeg_presets["h264_60"],
-    "ts":ffmpeg_presets["h264_60"],
-    "webm":ffmpeg_presets["webm_60"],
-    }
+    "mp4": ffmpeg_presets["h264_60_lossy"],
+    "avi": ffmpeg_presets["h264_60"],
+    "mkv": ffmpeg_presets["h264_60"],
+    "ts": ffmpeg_presets["h264_60"],
+    "webm": ffmpeg_presets["webm_60"],
+}
 
 # These options can be overridden.
 option_values = {
-    "f":"Force copy",
-    "m":"Delete source-files",
-    "s":"Sort files in ascending order", # Defaults to True on UNIX systems.
-    "nv":"Disable video rendering",
-    "sc":"Skip copy",
+    "f": "Force copy",
+    "m": "Delete source-files",
+    "s": "Sort files in ascending order",  # Defaults to True on UNIX systems.
+    "nv": "Disable video rendering",
+    "sc": "Skip copy",
 }
 
 ignored_entries = [
@@ -70,7 +73,8 @@ for i in ignored_entries:
         dest_path.remove(i)
 
 ffmpeg_output = ffmpeg_default_output if len(input_args) < 2 else input_args[1]
-frm_frmt = "." + re.match(".*\.(.*)$", (frame_dir[0] if len(frame_dir) >= 1 else dest_path[0])).group(1)
+frm_frmt = "." + re.match(".*\.(.*)$", (
+    frame_dir[0] if len(frame_dir) >= 1 else dest_path[0])).group(1)
 out_frmt = re.match(".*\.(.*)$", ffmpeg_output).group(1)
 copy_success = False
 frameid = 0
@@ -105,15 +109,26 @@ if arg_options["m"] == True and copy_success:
 try:
     if arg_options["nv"] != True:
         if out_frmt in ffmpeg_formats:
-            ffmpeg_input = os.path.join(frames_cache_dir, "%%%sd%s" % (str(frames_filename_len), frm_frmt))
-            if ffmpeg_debug == True:
-                ffmpeg_formats[out_frmt] = "%s %s" % (ffmpeg_debugArgs, ffmpeg_formats[out_frmt])
+            ffmpeg_input = os.path.join(frames_cache_dir, "%%%sd%s" % (
+                str(frames_filename_len), frm_frmt)
+            )
+            if ffmpeg_debug is True:
+                ffmpeg_formats[out_frmt] = "%s %s" % (
+                    ffmpeg_debugArgs, ffmpeg_formats[out_frmt]
+                )
             if "<input>" in ffmpeg_formats[out_frmt]:
-                ffmpeg_formats[out_frmt] = ffmpeg_formats[out_frmt].replace("<input>", ffmpeg_input)
+                ffmpeg_formats[out_frmt] = (
+                    ffmpeg_formats[out_frmt].replace("<input>", ffmpeg_input)
+                )
             if "<output>" in ffmpeg_formats[out_frmt]:
-                ffmpeg_formats[out_frmt] = ffmpeg_formats[out_frmt].replace("<output>", ffmpeg_output)
+                ffmpeg_formats[out_frmt] = (
+                    ffmpeg_formats[out_frmt].replace("<output>", ffmpeg_output)
+                )
             print("Loading FFmpeg.")
-            ffmpeg = subprocess.Popen("%s %s" % (ffmpeg_binary, ffmpeg_formats[out_frmt]), shell=True, stdout=subprocess.PIPE)
+            ffmpeg = subprocess.Popen(
+                "%s %s" % (ffmpeg_binary, ffmpeg_formats[out_frmt]),
+                shell=True,
+                stdout=subprocess.PIPE)
             ffmpeg.wait()
         else:
             print("Warning: Unknown output format!")
